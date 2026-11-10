@@ -80,3 +80,40 @@ export function ringkasStatistik(baris: BarisStatistik[]): RingkasanStatistik {
   const menang = baris.reduce((a, b) => a + b.menang, 0);
   return { main, menang, persen: persen(menang, main), perPeran };
 }
+
+/* ------------------------------ Single login ------------------------------ */
+
+export const PESAN_DIKELUARKAN = 'Akunmu masuk di perangkat lain, jadi kamu dikeluarkan dari perangkat ini.';
+/** Jeda pengecekan berkala apakah sesi di perangkat ini masih yang aktif (hanya saat halaman terlihat). */
+export const JEDA_CEK_SESI_MS = 5000;
+/** Nama event window yang memberi tahu layar online bahwa perangkat ini dikeluarkan. */
+export const EVENT_DIKELUARKAN = 'werewolf:dikeluarkan';
+
+/** Hasil RPC cek_sesi_aktif: dikeluarkan hanya bila server menjawab tegas `false` (galat jaringan diabaikan). */
+export function sesiDigantikan(hasil: { data: unknown; error: unknown }): boolean {
+  return !hasil.error && hasil.data === false;
+}
+
+/** Galat RPC/RLS yang menolak karena sesi sudah digantikan perangkat lain. */
+export function galatSesiTidakAktif(e: { message?: string; code?: string } | null | undefined): boolean {
+  return !!e && (e.message ?? '').includes('sesi_tidak_aktif');
+}
+
+/* ------------------------------ Ganti username ------------------------------ */
+
+export const JEDA_GANTI_USERNAME_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Kapan username boleh diganti lagi, atau null bila sudah boleh. */
+export function bisaGantiLagi(diganti: string | null, sekarang = Date.now()): Date | null {
+  if (!diganti) return null;
+  const t = new Date(diganti).getTime() + JEDA_GANTI_USERNAME_MS;
+  return Number.isFinite(t) && t > sekarang ? new Date(t) : null;
+}
+
+export function pesanGantiUsername(e: { code?: string; message?: string }): string {
+  if (e.code === '23505') return 'Username sudah dipakai.';
+  if (e.code === '22023' || e.code === 'P0001') return `${e.message ?? 'Username tidak valid'}.`;
+  if (e.code === '42501') return 'Harus masuk dulu.';
+  if (galatSesiTidakAktif(e)) return PESAN_DIKELUARKAN;
+  return 'Gagal mengganti username. Periksa internet lalu coba lagi.';
+}
