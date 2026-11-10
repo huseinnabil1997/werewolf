@@ -55,6 +55,10 @@ export interface HasilVoting {
   lewati: number;
   tereliminasi: string | null;
   seri: boolean;
+  /** Pemain yang seri di posisi teratas (atau seri dengan Lewati). */
+  kandidatSeri: string[];
+  keputusan: 'eliminasi' | 'voteUlang' | 'tanpaEliminasi';
+  putaran: 1 | 2;
 }
 
 export interface StateGame {
@@ -72,6 +76,10 @@ export interface StateGame {
   /** Korban malam terakhir (null = tidak ada yang tewas). */
   korbanMalam: string | null;
   suara: Record<string, string>;
+  /** Putaran voting: 2 = vote ulang sekali, hanya antara pemain yang seri. */
+  putaranVote: 1 | 2;
+  /** Kandidat yang boleh dipilih di vote ulang (kosong di putaran 1 = semua pemain hidup). */
+  kandidat: string[];
   hasilVoting: HasilVoting | null;
   pemenang: Tim | null;
   durasiDiskusi: number;
@@ -168,6 +176,8 @@ export function mulaiGame(
     riwayatLihat: [],
     korbanMalam: null,
     suara: {},
+    putaranVote: 1,
+    kandidat: [],
     hasilVoting: null,
     pemenang: null,
     durasiDiskusi: opsi.durasiDiskusi ?? 0,
@@ -181,7 +191,7 @@ export const namaPemain = (s: StateGame, id: string | null | undefined): string 
   s.pemain.find((p) => p.id === id)?.nama ?? '?';
 
 function keMalam(s: StateGame): StateGame {
-  return { ...s, fase: 'malam', ronde: s.ronde + 1, malam: malamKosong(), suara: {}, hasilVoting: null, diskusiSampai: null };
+  return { ...s, fase: 'malam', ronde: s.ronde + 1, malam: malamKosong(), suara: {}, putaranVote: 1, kandidat: [], hasilVoting: null, diskusiSampai: null };
 }
 
 /** Pemain sudah melihat kartunya. Saat semua siap, malam pertama dimulai. */
@@ -189,7 +199,15 @@ export function tandaiSiap(s: StateGame, id: string): StateGame {
   if (s.fase !== 'peran' || !(id in s.peran)) return s;
   const siap = { ...s.siap, [id]: true };
   const n = { ...s, siap };
-  return s.pemain.every((p) => siap[p.id]) ? keMalam(n) : n;
+  return s.pemain.filter((p) => s.hidup[p.id]).every((p) => siap[p.id]) ? keMalam(n) : n;
+}
+
+/** Batalkan Siap selama malam pertama belum dimulai. */
+export function batalSiap(s: StateGame, id: string): StateGame {
+  if (s.fase !== 'peran' || !s.siap[id]) return s;
+  const siap = { ...s.siap };
+  delete siap[id];
+  return { ...s, siap };
 }
 
 /** Paksa mulai malam (host), meski belum semua menekan siap. */
@@ -286,13 +304,21 @@ export function mulaiDiskusi(s: StateGame, sekarang = Date.now()): StateGame {
 
 export function mulaiVoting(s: StateGame): StateGame {
   if (s.fase !== 'diskusi' && s.fase !== 'pagi') return s;
-  return { ...s, fase: 'voting', suara: {}, hasilVoting: null, diskusiSampai: null };
+  return { ...s, fase: 'voting', suara: {}, putaranVote: 1, kandidat: [], hasilVoting: null, diskusiSampai: null };
+}
+
+/** Target yang boleh dipilih pemain id di putaran voting ini (tanpa Lewati). */
+export function targetSahVoting(s: StateGame, id: string): string[] {
+  const calon = s.putaranVote === 2 && s.kandidat.length ? s.kandidat : idHidup(s);
+  return calon.filter((t) => t !== id && s.hidup[t]);
 }
 
 export function beriSuara(s: StateGame, id: string, target: string): HasilAksi {
   if (s.fase !== 'voting') return { ok: false, galat: 'Voting belum dibuka.' };
   if (!s.hidup[id]) return { ok: false, galat: 'Pemain yang tewas tidak bisa memilih.' };
-  if (target !== LEWATI && (!s.hidup[target] || target === id)) return { ok: false, galat: 'Pilihan tidak sah.' };
+  if (target !== LEWATI && !targetSahVoting(s, id).includes(target)) {
+    return { ok: false, galat: s.putaranVote === 2 ? 'Vote ulang hanya antara pemain yang seri.' : 'Pilihan tidak sah.' };
+  }
   return { ok: true, state: { ...s, suara: { ...s.suara, [id]: target } } };
 }
 
@@ -301,10 +327,11 @@ export function votingLengkap(s: StateGame): boolean {
 }
 
 /**
- * Hitung suara. Aturan: tereliminasi hanya jika satu pemain unggul sendiri DAN suaranya lebih banyak dari
- * jumlah Lewati. Seri di posisi teratas atau Lewati >= suara teratas: tidak ada yang tereliminasi.
+ * Hitung suara. Satu pemain unggul sendiri DAN suaranya lebih banyak dari Lewati: tereliminasi.
+ * Seri di posisi teratas (termasuk seri dengan Lewati): vote ulang sekali hanya antara yang seri; bila di vote
+ * ulang masih seri, tidak ada yang tereliminasi. Lewati lebih banyak dari suara teratas: tidak ada yang tereliminasi.
  */
-export function hitungSuara(suara: Record<string, string>, hidup: readonly string[]): HasilVoting {
+export function hitungSuara(suara: Record<string, string>, hidup: readonly string[], putaran: 1 | 2 = 1): HasilVoting {
   const hitung: Record<string, number> = {};
   let lewati = 0;
   for (const [pemilih, t] of Object.entries(suara)) {
@@ -314,24 +341,55 @@ export function hitungSuara(suara: Record<string, string>, hidup: readonly strin
   }
   const nilai = Object.values(hitung);
   const maks = nilai.length ? Math.max(...nilai) : 0;
-  const teratas = Object.keys(hitung).filter((t) => hitung[t] === maks);
-  const seri = maks > 0 && teratas.length > 1;
-  const tereliminasi = maks > 0 && teratas.length === 1 && maks > lewati ? teratas[0] : null;
-  return { hitung, lewati, tereliminasi, seri };
+  const teratas = Object.keys(hitung).filter((t) => hitung[t] === maks).sort();
+  const unggul = maks > 0 && teratas.length === 1 && maks > lewati;
+  const seri = maks > 0 && maks >= lewati && !unggul;
+  const keputusan: HasilVoting['keputusan'] = unggul ? 'eliminasi' : seri && putaran === 1 ? 'voteUlang' : 'tanpaEliminasi';
+  return { hitung, lewati, tereliminasi: unggul ? teratas[0] : null, seri, kandidatSeri: seri ? teratas : [], keputusan, putaran };
 }
 
 export function selesaikanVoting(s: StateGame): StateGame {
   if (s.fase !== 'voting') return s;
-  const hasil = hitungSuara(s.suara, idHidup(s));
+  const hasil = hitungSuara(s.suara, idHidup(s), s.putaranVote);
+  if (hasil.keputusan === 'voteUlang') {
+    return {
+      ...s,
+      suara: {},
+      putaranVote: 2,
+      kandidat: hasil.kandidatSeri,
+      hasilVoting: hasil,
+      log: [...s.log, `Voting hari ${s.ronde}: seri, vote ulang antara ${hasil.kandidatSeri.map((id) => namaPemain(s, id)).join(', ')}.`],
+    };
+  }
   const hidup = { ...s.hidup };
   if (hasil.tereliminasi) hidup[hasil.tereliminasi] = false;
   const pesan = hasil.tereliminasi
     ? `Voting hari ${s.ronde}: ${namaPemain(s, hasil.tereliminasi)} tereliminasi.`
     : hasil.seri
-      ? `Voting hari ${s.ronde}: seri, tidak ada yang tereliminasi.`
+      ? `Voting hari ${s.ronde}: masih seri, tidak ada yang tereliminasi.`
       : `Voting hari ${s.ronde}: tidak ada yang tereliminasi.`;
   const pemenang = cekPemenang(s.peran, hidup);
   return { ...s, hidup, hasilVoting: hasil, fase: pemenang ? 'selesai' : 'hasil_voting', pemenang, log: [...s.log, pesan] };
+}
+
+/**
+ * Pemain dikeluarkan host di tengah permainan: dianggap tewas (perannya terbuka), lalu pemenang dicek.
+ * Malam atau voting yang menjadi lengkap karenanya langsung diselesaikan.
+ */
+export function keluarkanPemain(s: StateGame, id: string, rng: Rng = Math.random): StateGame {
+  if (!s.hidup[id] || s.fase === 'selesai') return s;
+  const hidup = { ...s.hidup, [id]: false };
+  const suara = { ...s.suara };
+  delete suara[id];
+  for (const [k, v] of Object.entries(suara)) if (v === id) delete suara[k];
+  const kandidat = s.kandidat.filter((k) => k !== id);
+  let n: StateGame = { ...s, hidup, suara, kandidat, log: [...s.log, `${namaPemain(s, id)} dikeluarkan dari permainan.`] };
+  const pemenang = cekPemenang(s.peran, hidup);
+  if (pemenang) return { ...n, fase: 'selesai', pemenang };
+  if (n.fase === 'peran' && n.pemain.filter((p) => n.hidup[p.id]).every((p) => n.siap[p.id])) n = keMalam(n);
+  else if (malamLengkap(n)) n = selesaikanMalam(n, rng);
+  else if (votingLengkap(n)) n = selesaikanVoting(n);
+  return n;
 }
 
 export function lanjutMalam(s: StateGame): StateGame {
