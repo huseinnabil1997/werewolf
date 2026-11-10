@@ -1,0 +1,32 @@
+{
+  "name": "werewolf",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Game Werewolf: main online realtime (tiap pemain di HP sendiri) atau pass-and-play di satu HP.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "npx serve out",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.109.0",
+    "motion": "14.11.1",
+    "next": "16.4.3",
+    "qrcode": "1.5.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.3",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.5"
+  }
+}
