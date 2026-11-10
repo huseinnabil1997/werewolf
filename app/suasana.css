@@ -1,0 +1,148 @@
+/*
+ * Suasana fase: malam (gelap, bulan, bintang) dan siang (langit biru terang, matahari, tema terang penuh).
+ * Tema diatur lewat data-suasana di <html> (senja = menu, malam, pagi = siang). Token warna didaftarkan
+ * dengan @property supaya bisa beranimasi halus saat matahari terbit/terbenam. data-transisi
+ * (terbit/terbenam) dipasang sebentar untuk cahaya cakrawala.
+ */
+@property --bg { syntax: '<color>'; inherits: true; initial-value: #090909; }
+@property --permukaan { syntax: '<color>'; inherits: true; initial-value: rgba(17, 17, 17, 0.82); }
+@property --permukaan-2 { syntax: '<color>'; inherits: true; initial-value: #161616; }
+@property --garis { syntax: '<color>'; inherits: true; initial-value: #232323; }
+@property --garis-kuat { syntax: '<color>'; inherits: true; initial-value: #3a3a3a; }
+@property --teks { syntax: '<color>'; inherits: true; initial-value: #f3f2e8; }
+@property --redup { syntax: '<color>'; inherits: true; initial-value: #9a9a92; }
+@property --aksen { syntax: '<color>'; inherits: true; initial-value: #e8f000; }
+@property --darah { syntax: '<color>'; inherits: true; initial-value: #ff4040; }
+@property --bulan { syntax: '<color>'; inherits: true; initial-value: #c7d2ff; }
+@property --hijau { syntax: '<color>'; inherits: true; initial-value: #3ddc84; }
+@property --ungu { syntax: '<color>'; inherits: true; initial-value: #a78bfa; }
+@property --pada-aksen { syntax: '<color>'; inherits: true; initial-value: #0a0a0a; }
+@property --pada-darah { syntax: '<color>'; inherits: true; initial-value: #0a0a0a; }
+@property --pada-teks { syntax: '<color>'; inherits: true; initial-value: #0b0b0b; }
+@property --lapis-tombol { syntax: '<color>'; inherits: true; initial-value: rgba(9, 9, 9, 0.6); }
+@property --lapis-chip { syntax: '<color>'; inherits: true; initial-value: rgba(30, 30, 30, 0.7); }
+@property --lapis-isian { syntax: '<color>'; inherits: true; initial-value: rgba(5, 5, 5, 0.75); }
+@property --dasar { syntax: '<color>'; inherits: true; initial-value: #000; }
+@property --isian { syntax: '<color>'; inherits: true; initial-value: #141414; }
+@property --biru { syntax: '<color>'; inherits: true; initial-value: #6b8cff; }
+@property --kuning { syntax: '<color>'; inherits: true; initial-value: #fbbf24; }
+
+:root {
+  --kuning: #fbbf24;
+  --durasi-suasana: 2.6s;
+  transition-property: --bg, --permukaan, --permukaan-2, --garis, --garis-kuat, --teks, --redup, --aksen, --darah, --bulan, --hijau,
+    --ungu, --pada-aksen, --pada-darah, --pada-teks, --lapis-tombol, --lapis-chip, --lapis-isian, --dasar, --isian, --biru, --kuning;
+  transition-duration: var(--durasi-suasana);
+  transition-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+/* Tema siang. Kontras teks dicek WCAG AA: teks #0f1720 dan redup #334155 pada kartu putih >= 10:1,
+ * pada langit teratas #6db3ef >= 4.6:1; aksen #b45309 pada putih 5.0:1, teks putih di atas aksen 5.0:1. */
+:root[data-suasana='pagi'] {
+  --bg: #dcefff;
+  --permukaan: rgba(255, 255, 255, 0.88);
+  --permukaan-2: #ffffff;
+  --garis: #c6d5e4;
+  --garis-kuat: #7b8fa5;
+  --teks: #0f1720;
+  --redup: #334155;
+  --aksen: #b45309;
+  --darah: #c62828;
+  --bulan: #3346a8;
+  --hijau: #15803d;
+  --ungu: #6d28d9;
+  --pada-aksen: #ffffff;
+  --pada-darah: #ffffff;
+  --pada-teks: #ffffff;
+  --lapis-tombol: rgba(255, 255, 255, 0.82);
+  --lapis-chip: rgba(255, 255, 255, 0.85);
+  --lapis-isian: #ffffff;
+  --dasar: #eef6fd;
+  --isian: #ffffff;
+  --biru: #1d4ed8;
+  --kuning: #92400e;
+  --aksen-tekan: #92400e;
+  color-scheme: light;
+}
+
+/* ---------------------------------- Langit ---------------------------------- */
+.langit-lapis { opacity: 0; transition: opacity var(--durasi-suasana) cubic-bezier(0.45, 0, 0.55, 1); }
+:root:not([data-suasana]) .langit-senja,
+[data-suasana='senja'] .langit-senja,
+[data-suasana='malam'] .langit-malam,
+[data-suasana='pagi'] .langit-siang { opacity: 1; }
+/* Saat terbit langit cerah sedikit setelah matahari mulai naik; saat terbenam malam turun setelah matahari turun. */
+[data-transisi='terbit'] .langit-siang { transition-delay: 0.5s; }
+[data-transisi='terbenam'] .langit-malam { transition-delay: 0.9s; }
+
+.langit-senja { background: radial-gradient(120% 70% at 80% -10%, #2a1a12 0%, #120c0b 40%, #090909 75%); }
+.langit-malam { background: radial-gradient(110% 70% at 75% -10%, #18203f 0%, #0b0e1c 45%, #050608 80%); }
+.langit-siang { background: linear-gradient(180deg, #6db3ef 0%, #9fd0f7 38%, #cde8fd 70%, #e9f5ff 100%); }
+.langit-fajar { background: linear-gradient(to top, rgba(255, 158, 70, 0.9), rgba(255, 120, 110, 0.4) 38%, transparent 70%); }
+[data-transisi='terbenam'] .langit-fajar { background: linear-gradient(to top, rgba(232, 84, 44, 0.92), rgba(140, 60, 130, 0.5) 42%, transparent 75%); }
+[data-transisi] .langit-fajar { animation: cahaya-cakrawala calc(var(--durasi-suasana) + 0.6s) ease-in-out both; }
+@keyframes cahaya-cakrawala { 0% { opacity: 0; } 45% { opacity: 1; } 100% { opacity: 0; } }
+
+.awan {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(70px 26px at 18% 34%, rgba(255, 255, 255, 0.85), transparent 70%),
+    radial-gradient(90px 30px at 26% 32%, rgba(255, 255, 255, 0.7), transparent 70%),
+    radial-gradient(110px 34px at 72% 58%, rgba(255, 255, 255, 0.7), transparent 70%),
+    radial-gradient(80px 26px at 82% 56%, rgba(255, 255, 255, 0.8), transparent 70%),
+    radial-gradient(120px 36px at 40% 82%, rgba(255, 255, 255, 0.6), transparent 70%);
+  animation: awan 40s ease-in-out infinite alternate;
+}
+@keyframes awan { to { transform: translateX(8%); } }
+
+/* Matahari: di bawah cakrawala saat malam, naik melengkung ke kanan atas saat siang. */
+.matahari {
+  position: absolute; top: calc(env(safe-area-inset-top) + 92px); right: -14px; width: 84px; height: 84px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #fffbe6 0%, #ffe26a 45%, #ffb300 100%);
+  box-shadow: 0 0 0 14px rgba(255, 220, 90, 0.2), 0 0 0 30px rgba(255, 220, 90, 0.1), 0 0 140px 50px rgba(255, 200, 60, 0.45);
+  transform: translate(-45vw, 92vh) scale(0.8); opacity: 0;
+  transition: transform calc(var(--durasi-suasana) + 0.4s) cubic-bezier(0.55, 0, 0.75, 0.25), opacity 0.6s ease calc(var(--durasi-suasana) - 0.2s), filter var(--durasi-suasana);
+}
+[data-suasana='pagi'] .matahari {
+  transform: none; opacity: 1;
+  transition: transform calc(var(--durasi-suasana) + 0.4s) cubic-bezier(0.2, 0.7, 0.3, 1), opacity 0.5s ease, filter var(--durasi-suasana);
+}
+[data-transisi='terbit'] .matahari, [data-transisi='terbenam'] .matahari { filter: hue-rotate(-18deg) saturate(1.4); }
+
+/* Bulan: turun saat terbit, naik kembali saat terbenam. */
+.bulan {
+  position: absolute; top: calc(env(safe-area-inset-top) + 120px); right: -22px; width: 72px; height: 72px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f6f4e6, #cfd3e8 60%, #9aa3c4);
+  box-shadow: 0 0 60px 10px rgba(199, 210, 255, 0.25);
+  opacity: 0; transform: translate(-30vw, 80vh) scale(0.85);
+  transition: transform var(--durasi-suasana) cubic-bezier(0.55, 0, 0.75, 0.25), opacity 1.2s ease;
+}
+[data-suasana='malam'] .bulan {
+  opacity: 0.5; transform: none;
+  transition: transform calc(var(--durasi-suasana) + 0.4s) cubic-bezier(0.2, 0.7, 0.3, 1) 0.6s, opacity 1.4s ease 0.6s;
+}
+.matahari-senja {
+  position: absolute; top: calc(env(safe-area-inset-top) + 120px); right: -22px; width: 72px; height: 72px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffd9a0, #c4643a 70%); box-shadow: 0 0 70px 14px rgba(196, 100, 58, 0.25); opacity: 0.7;
+}
+.kabut { transition: opacity var(--durasi-suasana); }
+[data-suasana='pagi'] .kabut { opacity: 0; }
+.butiran { transition: opacity var(--durasi-suasana); }
+[data-suasana='pagi'] .butiran { opacity: 0.025; }
+
+/* ------------------------- Penyesuaian komponen siang ------------------------ */
+[data-suasana='pagi'] .kartu, [data-suasana='pagi'] .panel { box-shadow: 0 6px 24px rgba(30, 70, 120, 0.12); }
+[data-suasana='pagi'] .tombol::after { background: radial-gradient(120px circle at var(--gx, 50%) var(--gy, 50%), rgba(255, 255, 255, 0.5), transparent 70%); }
+[data-suasana='pagi'] .spanduk-warga { border-color: #d9a43a; background: linear-gradient(160deg, rgba(255, 244, 200, 0.95), rgba(255, 226, 150, 0.9)); color: #7c2d12; }
+[data-suasana='pagi'] .spanduk-werewolf { border-color: #e3a1a1; background: linear-gradient(160deg, rgba(255, 228, 228, 0.95), rgba(255, 205, 205, 0.9)); color: #991b1b; }
+[data-suasana='pagi'] .hasil-lihat.ya { color: #991b1b; border-color: #e3a1a1; background: #fee2e2; }
+[data-suasana='pagi'] .hasil-lihat.tidak { color: #166534; border-color: #86c79b; background: #dcfce7; }
+[data-suasana='pagi'] .lencana-status.main { color: #7c2d12; }
+[data-suasana='pagi'] .undang img, [data-suasana='pagi'] .qr-kosong { box-shadow: inset 0 0 0 1px var(--garis); }
+[data-suasana='pagi'] .daftar-peringkat li.sendiri { background: rgba(21, 128, 61, 0.1); }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --durasi-suasana: 0s; transition: none; }
+  .langit-lapis, .matahari, .bulan, .kabut, .butiran, [data-suasana] .matahari, [data-suasana] .bulan { transition: none !important; }
+  [data-transisi] .langit-fajar, .awan { animation: none; }
+}

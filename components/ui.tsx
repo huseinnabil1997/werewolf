@@ -1,36 +1,34 @@
 'use client';
 
 // Komponen tampilan bersama mode Lokal dan Online.
-import { AnimatePresence, motion } from 'motion/react';
+import { motion } from 'motion/react';
 import { useState, type ReactNode } from 'react';
 import { DESKRIPSI_PERAN, LEWATI, NAMA_PERAN, type HasilVoting, type Peran, type Tim } from '@/lib/game';
 import { Miring, PEGAS, TeksAcak, TeksMuncul, Tombol } from './gerak';
 
-export type Suasana = 'malam' | 'pagi' | 'senja';
+export type { Suasana } from '@/lib/suasana';
 
-/** Latar langit: malam (bulan, bintang, kabut) atau pagi (fajar). Bergantian dengan crossfade. */
-export function Langit({ suasana }: { suasana: Suasana }) {
+/**
+ * Latar langit. Semua lapisan selalu ada; yang tampil dipilih CSS lewat data-suasana di <html>, sehingga
+ * pergantian malam ke siang (matahari terbit) dan siang ke malam (matahari terbenam) berjalan sebagai transisi
+ * CSS yang sama di semua HP karena mengikuti fase game.
+ */
+export function Langit() {
   return (
     <div className="langit" aria-hidden>
-      <AnimatePresence initial={false}>
-        <motion.div
-          key={suasana}
-          className={`langit-lapis langit-${suasana}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1.4, ease: [0.44, 0, 0.56, 1] }}
-        >
-          <motion.div
-            className="benda-langit"
-            initial={{ y: 80, scale: 0.8, opacity: 0 }}
-            animate={{ y: 0, scale: 1, opacity: 1 }}
-            transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
-          />
-          {suasana === 'malam' ? <div className="bintang" /> : null}
-          <div className="kabut" />
-        </motion.div>
-      </AnimatePresence>
+      <div className="langit-lapis langit-senja">
+        <div className="matahari-senja" />
+      </div>
+      <div className="langit-lapis langit-malam">
+        <div className="bintang" />
+      </div>
+      <div className="langit-lapis langit-siang">
+        <div className="awan" />
+      </div>
+      <div className="langit-lapis langit-fajar" />
+      <div className="bulan" />
+      <div className="matahari" />
+      <div className="kabut" />
       <div className="butiran" />
     </div>
   );
@@ -105,6 +103,8 @@ export interface OpsiPemain {
   nama: string;
   catatan?: string;
   nonaktif?: boolean;
+  /** Pengganti inisial, mis. avatar berbingkai di mode online. */
+  ikon?: ReactNode;
 }
 
 /** Daftar pilihan pemain (target malam / voting) dengan tombol besar. */
@@ -131,7 +131,7 @@ export function PilihPemain({ opsi, terpilih, onPilih, lewati, nonaktif }: {
           transition={{ ...PEGAS, delay: i * 0.035 }}
           whileTap={{ scale: 0.97 }}
         >
-          <span className="inisial">{o.nama.slice(0, 1).toUpperCase()}</span>
+          {o.ikon ?? <span className="inisial">{o.nama.slice(0, 1).toUpperCase()}</span>}
           <span className="nama-opsi">{o.nama}</span>
           {o.catatan ? <span className="catatan-opsi">{o.catatan}</span> : null}
         </motion.button>
