@@ -2,23 +2,31 @@
 
 // Kerangka aplikasi: beranda, mode Lokal, mode Online, akun/profil, dan cara main.
 import { MotionConfig, motion } from 'motion/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { bacaSesi } from '@/lib/online/jaringan';
 import { kodeDariUrl } from '@/lib/online/protokol';
-import { AkunProvider, LayarProfil, useAkun } from './Akun';
+import { bacaUmpan, daftarkanSW, pasangUmpan } from '@/lib/umpan/mesin';
+import { DURASI_TRANSISI_MS, jenisTransisi } from '@/lib/suasana';
+import { AkunProvider, GerbangAkun, LayarProfil, useAkun } from './Akun';
+import { LayarMasukan } from './Masukan';
+import { DialogProvider } from './Modal';
+import { TombolSuara } from './PanelSuara';
+import { LayarPeringkat } from './Peringkat';
 import { Layar, PEGAS, Panel, TeksAcak, TeksMuncul, Ticker, Tombol } from './gerak';
 import LokalGame from './LokalGame';
 import OnlineGame from './OnlineGame';
 import { IkonPeran, Langit, type Suasana } from './ui';
 
-type Mode = 'beranda' | 'online' | 'lokal' | 'profil' | 'cara';
+type Mode = 'beranda' | 'online' | 'lokal' | 'profil' | 'cara' | 'peringkat' | 'masukan';
 
 export default function App() {
   return (
     <MotionConfig reducedMotion="user" transition={PEGAS}>
-      <AkunProvider>
-        <Isi />
-      </AkunProvider>
+      <DialogProvider>
+        <AkunProvider>
+          <Isi />
+        </AkunProvider>
+      </DialogProvider>
     </MotionConfig>
   );
 }
@@ -36,25 +44,42 @@ function Isi() {
   const { akun } = useAkun();
   const ubahSuasana = useCallback((s: Suasana) => setSuasana(s), []);
   useEffect(() => {
-    if (mode === 'beranda' || mode === 'profil' || mode === 'cara') {
+    const lepas = pasangUmpan();
+    if (bacaUmpan().notifikasi) void daftarkanSW();
+    return lepas;
+  }, []);
+  useEffect(() => {
+    if (mode !== 'online' && mode !== 'lokal') {
       const t = setTimeout(() => setSuasana('senja'), 0);
       return () => clearTimeout(t);
     }
   }, [mode]);
+  const suasanaLalu = useRef<Suasana | null>(null);
   useEffect(() => {
-    document.documentElement.dataset.suasana = suasana;
+    const akar = document.documentElement;
+    const dari = suasanaLalu.current;
+    suasanaLalu.current = suasana;
+    const t = dari ? jenisTransisi(dari, suasana) : null;
+    if (t) akar.dataset.transisi = t;
+    akar.dataset.suasana = suasana;
+    if (!t) return;
+    const h = setTimeout(() => {
+      if (akar.dataset.transisi === t) delete akar.dataset.transisi;
+    }, DURASI_TRANSISI_MS);
+    return () => clearTimeout(h);
   }, [suasana]);
   const keBeranda = useCallback(() => setMode('beranda'), []);
 
   return (
     <>
-      <Langit suasana={suasana} />
+      <Langit />
       <main className="wadah">
         <header className="kepala">
           <button type="button" className="logo" onClick={() => setMode('beranda')} aria-label="Werewolf, ke beranda">
             <TeksAcak teks="WEREWOLF" />
           </button>
           <nav className="navigasi">
+            <TombolSuara />
             <button type="button" className={mode === 'profil' ? 'aktif' : ''} onClick={() => setMode('profil')}>
               {akun ? akun.username : 'Masuk'}
             </button>
@@ -66,6 +91,12 @@ function Isi() {
           {mode === 'online' ? <OnlineGame kodeAwal={awal.kode} onSuasana={ubahSuasana} onKeluar={keBeranda} /> : null}
           {mode === 'profil' ? <LayarProfil /> : null}
           {mode === 'cara' ? <CaraMain kembali={keBeranda} /> : null}
+          {mode === 'peringkat' ? (
+            <GerbangAkun alasan="Peringkat hanya untuk pemain yang login.">{(a) => <LayarPeringkat akun={a} onBeranda={keBeranda} />}</GerbangAkun>
+          ) : null}
+          {mode === 'masukan' ? (
+            <GerbangAkun alasan="Login dulu untuk mengirim dan membaca masukan.">{(a) => <LayarMasukan akun={a} onBeranda={keBeranda} />}</GerbangAkun>
+          ) : null}
         </Layar>
       </main>
     </>
@@ -76,7 +107,9 @@ function Beranda({ pilih }: { pilih: (m: Mode) => void }) {
   const kartu: { m: Mode; no: string; label: string; judul: string; isi: string }[] = [
     { m: 'online', no: '001', label: 'HP MASING-MASING', judul: 'Main Online', isi: 'Buat room, bagikan kode atau QR. Butuh login.' },
     { m: 'lokal', no: '002', label: 'SATU HP', judul: 'Main Lokal', isi: 'Pass-and-play bergiliran. Tanpa login.' },
-    { m: 'cara', no: '003', label: 'ATURAN', judul: 'Cara Main', isi: 'Peran, fase malam dan siang, voting.' },
+    { m: 'peringkat', no: '003', label: 'TOP 50', judul: 'Peringkat', isi: 'Semua waktu dan musim bulan ini. Top 3 dapat frame avatar.' },
+    { m: 'cara', no: '004', label: 'ATURAN', judul: 'Cara Main', isi: 'Peran, fase malam dan siang, voting.' },
+    { m: 'masukan', no: '005', label: 'SARAN', judul: 'Masukan', isi: 'Kirim saran atau laporan bug, dukung masukan pemain lain.' },
   ];
   return (
     <div className="tumpuk">
@@ -132,13 +165,20 @@ function CaraMain({ kembali }: { kembali: () => void }) {
         <ol className="alur">
           <li><b>Malam</b>: werewolf memilih korban, Peramal melihat, Dokter melindungi.</li>
           <li><b>Pagi</b>: korban diumumkan beserta perannya. Korban yang dilindungi Dokter selamat.</li>
-          <li><b>Diskusi</b>: bicarakan siapa yang mencurigakan (timer opsional).</li>
-          <li><b>Voting</b>: pilih satu pemain atau Lewati. Hanya pemain dengan suara terbanyak tunggal yang tereliminasi, dan suaranya harus lebih banyak dari jumlah Lewati. Seri berarti tidak ada yang tereliminasi.</li>
+          <li><b>Diskusi</b>: bicarakan siapa yang mencurigakan, langsung atau lewat chat room (batas waktu opsional).</li>
+          <li><b>Voting</b>: pilih satu pemain atau Lewati. Hanya pemain dengan suara terbanyak tunggal yang tereliminasi, dan suaranya harus lebih banyak dari jumlah Lewati. Bila seri (termasuk seri dengan Lewati), ada vote ulang khusus pemain yang seri. Seri lagi berarti tidak ada yang tereliminasi.</li>
           <li><b>Menang</b>: warga menang bila semua werewolf tewas. Werewolf menang bila jumlahnya sama atau lebih banyak dari sisa pemain lain.</li>
         </ol>
       </Panel>
       <Panel label="KOMPOSISI OTOMATIS" nomor="R/03" jeda={0.1}>
         <p>4 sampai 5 pemain: 1 werewolf. 6 sampai 8: 2. 9 sampai 11: 3. 12 ke atas: 4. Peramal mulai 4 pemain, Dokter mulai 5 pemain. Host bisa mengubahnya.</p>
+      </Panel>
+      <Panel label="ONLINE" nomor="R/04" jeda={0.15}>
+        <ul className="alur">
+          <li><b>Host</b>: HP host menjalankan aturan. Bila host keluar atau hilang 15 detik, pemain lain mengambil alih otomatis dan permainan berlanjut.</li>
+          <li><b>Cari match</b>: pilih maksimal 4 sampai 8 pemain atau Acak. Room mulai otomatis saat penuh, atau 60 detik tanpa pemain baru bila sudah minimal 4.</li>
+          <li><b>Peringkat musim</b>: tiap bulan (WIB). Top 3 tiap kategori (Keseluruhan, Werewolf, Warga, Peramal, Dokter, Winrate tertinggi, Match terbanyak) mendapat frame avatar selama bulan itu; setelah musim berakhir jadi gelar teks.</li>
+        </ul>
       </Panel>
       <Tombol varian="hantu" onClick={kembali}>Kembali</Tombol>
     </div>

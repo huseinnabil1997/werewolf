@@ -23,10 +23,12 @@ import {
   selesaikanVoting,
   tandaiSiap,
   targetSahMalam,
+  targetSahVoting,
   type Komposisi,
   type StateGame,
 } from '@/lib/game';
 import { HitungMundur, Layar, Panel, Tombol } from './gerak';
+import { useDialog } from './Modal';
 import {
   Catatan,
   DaftarPeranAkhir,
@@ -74,6 +76,7 @@ export function suasanaDari(g: StateGame | null): Suasana {
 
 export default function LokalGame({ onSuasana, onKeluar }: { onSuasana: (s: Suasana) => void; onKeluar: () => void }) {
   const [s, setS] = useState<StateLokal>(baca);
+  const dialog = useDialog();
   const g = s.game;
   useEffect(() => {
     localStorage.setItem(KUNCI, JSON.stringify(s));
@@ -179,7 +182,9 @@ export default function LokalGame({ onSuasana, onKeluar }: { onSuasana: (s: Suas
         <details className="log">
           <summary>Catatan permainan</summary>
           <ul>{g.log.map((l, i) => <li key={i}>{l}</li>)}</ul>
-          <button type="button" className="tautan" onClick={() => window.confirm('Akhiri permainan ini?') && selesaiGame()}>Akhiri permainan</button>
+          <button type="button" className="tautan" onClick={async () => {
+            if (await dialog.konfirmasi({ judul: 'Akhiri permainan ini?', pesan: 'Permainan lokal dihentikan dan kembali ke pengaturan.', ok: 'Akhiri', bahaya: true })) selesaiGame();
+          }}>Akhiri permainan</button>
         </details>
       ) : null}
     </div>
@@ -220,8 +225,9 @@ export function PengaturKomposisi({ n, manual, onUbah, durasi, onDurasi, kunci }
   n: number;
   manual: Komposisi | null;
   onUbah: (k: Komposisi | null) => void;
-  durasi: number;
-  onDurasi: (d: number) => void;
+  /** Timer diskusi mode lokal. Mode online memakai panel batas waktu sendiri. */
+  durasi?: number;
+  onDurasi?: (d: number) => void;
   kunci?: boolean;
 }) {
   const k = manual ?? komposisiOtomatis(n);
@@ -238,10 +244,14 @@ export function PengaturKomposisi({ n, manual, onUbah, durasi, onDurasi, kunci }
         <Pengatur label="Dokter" nilai={k.dokter} min={0} maks={1} onUbah={(v) => onUbah({ ...k, dokter: v })} />
       </fieldset>
       <p className="catatan">Warga: {warga}. Werewolf harus kurang dari separuh pemain.</p>
-      <fieldset disabled={kunci} className="komposisi">
-        <Pengatur label="Timer diskusi" nilai={Math.round(durasi / 30) / 2} min={0} maks={10} satuan=" mnt" onUbah={(v) => onDurasi(Math.round(v * 2) * 30)} />
-      </fieldset>
-      <p className="catatan">0 = tanpa timer.</p>
+      {onDurasi ? (
+        <>
+          <fieldset disabled={kunci} className="komposisi">
+            <Pengatur label="Timer diskusi" nilai={Math.round((durasi ?? 0) / 30) / 2} min={0} maks={10} satuan=" mnt" onUbah={(v) => onDurasi(Math.round(v * 2) * 30)} />
+          </fieldset>
+          <p className="catatan">0 = tanpa timer.</p>
+        </>
+      ) : null}
     </Panel>
   );
 }
@@ -311,10 +321,15 @@ function AksiMalamLokal({ g, id, onSelesai }: { g: StateGame; id: string; onSele
 
 function VoteLokal({ g, id, onPilih }: { g: StateGame; id: string; onPilih: (t: string) => void }) {
   const [pilih, setPilih] = useState<string | null>(null);
-  const opsi = idHidup(g).filter((t) => t !== id).map((t) => ({ id: t, nama: namaPemain(g, t) }));
+  const opsi = targetSahVoting(g, id).map((t) => ({ id: t, nama: namaPemain(g, t) }));
+  const ulang = g.putaranVote === 2;
   return (
     <div className="tumpuk">
-      <JudulFase kecil={`VOTING ${g.ronde}`} judul="SIAPA WEREWOLF?" sub="Pilihanmu rahasia sampai semua memilih." />
+      <JudulFase
+        kecil={`VOTING ${g.ronde}${ulang ? ', PUTARAN 2' : ''}`}
+        judul={ulang ? 'VOTE ULANG' : 'SIAPA WEREWOLF?'}
+        sub={ulang ? `Suara seri. Pilih antara ${g.kandidat.map((k) => namaPemain(g, k)).join(', ')} atau Lewati. Seri lagi berarti tidak ada yang tereliminasi.` : 'Pilihanmu rahasia sampai semua memilih.'}
+      />
       <PilihPemain opsi={opsi} terpilih={pilih} onPilih={setPilih} lewati />
       <Tombol besar disabled={!pilih} onClick={() => onPilih(pilih ?? LEWATI)}>Kunci pilihan</Tombol>
     </div>

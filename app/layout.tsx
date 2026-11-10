@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import { JetBrains_Mono, Silkscreen } from 'next/font/google';
 import './globals.css';
+import './fitur.css';
+import './frame.css';
+import './suasana.css';
 
 // Font gratis (SIL OFL) pengganti font piksel dan mono di overrrides.com. next/font mengunduhnya saat build
 // dan menyajikannya dari situs ini sendiri.
@@ -12,7 +15,11 @@ const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 export const metadata: Metadata = {
   title: 'Werewolf: Awas Malam',
   description: 'Game Werewolf: main online dengan HP masing-masing atau bergiliran di satu HP.',
-  icons: { icon: [{ url: `${BASE}/icon.svg`, type: 'image/svg+xml' }] },
+  manifest: `${BASE}/manifest.webmanifest`,
+  icons: {
+    icon: [{ url: `${BASE}/icon.svg`, type: 'image/svg+xml' }, { url: `${BASE}/icon-192.png`, sizes: '192x192', type: 'image/png' }],
+    apple: [{ url: `${BASE}/icon-192.png`, sizes: '192x192' }],
+  },
   appleWebApp: { capable: true, title: 'Werewolf', statusBarStyle: 'black-translucent' },
 };
 

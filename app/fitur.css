@@ -1,0 +1,422 @@
+/* Komponen fitur yang diambil dari undercover (dialog, chat, suara, profil, peringkat, masukan, daftar room),
+ * diberi variabel tema Werewolf. Gaya dasar tombol/isian disesuaikan dengan tampilan overrrides. */
+:root {
+  --dasar: #000;
+  --isian: #141414;
+  --merah: var(--darah);
+  --biru: #6b8cff;
+  --pad: 16px;
+  --r-dalam: var(--r-kecil);
+  --r-luar: var(--r);
+  --pil: 999px;
+  --aksen-tekan: #c9d000;
+}
+
+.kartu { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 18px 16px; border: 1px solid var(--garis); border-radius: var(--r); background: var(--permukaan); }
+.kartu h2 { margin: 0; font-family: var(--piksel); font-size: 1.05rem; letter-spacing: 0.04em; }
+.kartu h3 { margin: 0; font-size: 0.95rem; }
+.nol { margin: 0; }
+.tengah-teks { text-align: center; }
+.jarak-atas { margin-top: 10px; }
+.label { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--redup); }
+.kepala-fase h2 { margin: 0; font-family: var(--piksel); font-size: 1.6rem; }
+.catatan.nol, .catatan.tengah-teks { border-left: 0; padding-left: 0; }
+.kecil-teks { font-size: 0.75rem; }
+.chip-grup { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-grup .chip, .tab-musim .chip, .batas-waktu .chip { min-height: 40px; padding: 0 14px; font-size: 0.8rem; background: transparent; color: var(--teks); cursor: pointer; }
+.chip.pilih { background: var(--aksen); color: var(--pada-aksen); border-color: var(--aksen); font-weight: 700; }
+.tab-musim { flex-direction: row; gap: 8px; padding: 8px; }
+.segmen { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border: 1px solid var(--garis); border-radius: var(--r-kecil); }
+.segmen button { min-height: 40px; border: 0; border-radius: 6px; background: transparent; color: var(--redup); font: inherit; font-weight: 700; }
+.segmen button[aria-pressed='true'] { background: var(--teks); color: var(--pada-teks); }
+.isian, .dialog-input, .chat-form input { width: 100%; min-height: 46px; border-radius: var(--r-kecil); border: 1px solid var(--garis-kuat); background: var(--isian); color: var(--teks); padding: 0 12px; font: inherit; }
+.isian:focus-visible, .dialog-input:focus-visible, .chat-form input:focus-visible { outline: 2px solid var(--aksen); outline-offset: 1px; }
+textarea.dialog-input { padding: 10px 12px; min-height: 96px; resize: vertical; }
+.utama, .kedua { width: 100%; min-height: 48px; padding: 0 18px; border-radius: var(--r-kecil); font: inherit; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; }
+.utama { background: var(--aksen); color: var(--pada-aksen); border: 1px solid var(--aksen); }
+.utama.bahaya, .kecil.bahaya { background: var(--darah); border-color: var(--darah); color: var(--pada-darah); }
+.kedua { background: transparent; color: var(--teks); border: 1px solid var(--garis-kuat); }
+.kedua:hover:not(:disabled) { border-color: var(--teks); }
+.utama:disabled, .kedua:disabled { opacity: 0.45; cursor: default; }
+button.kecil { min-height: 36px; padding: 0 12px; border-radius: var(--r-kecil); border: 1px solid var(--garis-kuat); background: transparent; color: var(--teks); font: inherit; font-size: 0.8rem; cursor: pointer; }
+button.kecil.utama { background: var(--aksen); color: var(--pada-aksen); border-color: var(--aksen); width: auto; min-height: 36px; }
+button.kecil.mini { min-height: 30px; font-size: 0.72rem; }
+.tombol-label { display: inline-flex; align-items: center; justify-content: center; }
+.tombol-label.nonaktif { opacity: 0.5; }
+.baris-cari { display: flex; gap: 8px; }
+.baris-cari .kedua { width: auto; }
+.aksi-bawah { height: 8px; }
+.wadah-lapisan { max-width: 520px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 12px) 16px 40px; display: flex; flex-direction: column; gap: 14px; }
+.kepala-lapisan { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.kepala-lapisan .logo-kecil { font-family: var(--piksel); letter-spacing: 0.06em; }
+.lapisan-profil { position: fixed; inset: 0; z-index: 60; overflow-y: auto; background: var(--bg); }
+.stat-utama { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+.stat-utama strong { display: block; font-family: var(--piksel); font-size: 1.5rem; color: var(--aksen); }
+.stat-utama span { font-size: 0.72rem; color: var(--redup); text-transform: uppercase; letter-spacing: 0.06em; }
+.daftar-riwayat, .daftar-award, .daftar-cari { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.daftar-riwayat li, .daftar-award li, .daftar-cari li { padding: 10px 0; border-top: 1px solid var(--garis); display: flex; flex-direction: column; gap: 2px; }
+.daftar-award li { flex-direction: row; justify-content: space-between; align-items: center; gap: 8px; }
+.teks-menang { color: var(--hijau); }
+.teks-kalah { color: var(--darah); }
+.pilih-gelar { display: flex; flex-direction: column; gap: 8px; }
+.pilih-gelar label { display: flex; gap: 8px; align-items: center; min-height: 36px; }
+.baris-avatar { display: flex; gap: 8px; width: 100%; }
+.baris-avatar > * { flex: 1; }
+.profil-kepala { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 8px 0; }
+.profil-kepala h2 { font-family: var(--piksel); font-size: 1.5rem; }
+.titik-hadir { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--garis-kuat); }
+.titik-hadir.online { background: var(--hijau); box-shadow: 0 0 6px var(--hijau); }
+
+/* Hitung mundur batas waktu: menempel di atas saat digulir, ringkas di HP. */
+.hitungan {
+  position: sticky; top: calc(env(safe-area-inset-top) + 8px); z-index: 5;
+  display: flex; flex-direction: column; gap: 6px; padding: 10px 14px;
+  background: var(--permukaan); border: 1px solid var(--garis); border-radius: var(--r-dalam);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+}
+.hitungan-baris { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.hitungan-label { font-size: 0.85rem; font-weight: 700; color: var(--redup); min-width: 0; overflow-wrap: anywhere; }
+.hitungan-angka { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; white-space: nowrap; }
+.hitungan-bar { height: 6px; border-radius: var(--pil); background: var(--permukaan-2); overflow: hidden; }
+.hitungan-bar > span { display: block; height: 100%; background: var(--aksen); transform-origin: left center; transition: transform 250ms linear; }
+.hitungan.mendesak { border-color: var(--merah); }
+.hitungan.mendesak .hitungan-angka { color: var(--merah); animation: hitungan-detak 1s ease-in-out infinite; }
+.hitungan.mendesak .hitungan-bar > span, .hitungan.habis .hitungan-bar > span { background: var(--merah); }
+.hitungan.habis { border-color: var(--merah); }
+.hitungan.habis .hitungan-angka { color: var(--merah); font-size: 1.15rem; }
+@keyframes hitungan-detak { 50% { transform: scale(1.08); } }
+.batas-waktu .baris-batas { display: flex; flex-direction: column; gap: 8px; }
+.batas-waktu .baris-batas + .baris-batas { margin-top: 12px; }
+.label-batas { margin: 0; font-size: 0.9rem; font-weight: 700; }
+.batas-waktu .chip { min-height: 40px; padding: 0 14px; }
+.batas-waktu .chip:disabled { cursor: default; }
+.batas-waktu .chip:disabled:not(.pilih) { opacity: 0.45; }
+.baris-tombol { display: flex; gap: 8px; margin-top: 8px; }
+.baris-tombol .kedua, .baris-tombol .utama { min-height: 48px; }
+
+.peran-civilian .kata, .menang-civilian .kata { color: var(--aksen); }
+.peran-undercover .kata, .menang-penyusup .kata { color: var(--merah); }
+
+/* Dialog in-app. Mobile: sheet dari bawah; layar lebar: di tengah. */
+.dialog-latar {
+  position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center;
+  padding: 12px calc(env(safe-area-inset-right) + 12px) calc(env(safe-area-inset-bottom) + 12px) calc(env(safe-area-inset-left) + 12px);
+  background: rgba(0, 0, 0, 0.7);
+  animation: dialog-latar-masuk 200ms ease-out both;
+}
+.dialog-latar.tutup { animation: dialog-latar-keluar 160ms ease-in both; pointer-events: none; }
+.dialog-panel {
+  width: 100%; max-width: 440px; max-height: calc(100dvh - 24px); overflow: auto; outline: none;
+  background: var(--permukaan-2); border-radius: var(--r-luar); padding: 24px var(--pad) var(--pad);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6); animation: dialog-naik 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.dialog-panel.bahaya h2 { color: var(--merah); }
+.dialog-latar.tutup .dialog-panel { animation: dialog-turun 160ms ease-in both; }
+.dialog-panel h2 { margin: 0 0 8px; font-size: 1.35rem; font-weight: 800; }
+.dialog-pesan { margin: 0; color: var(--redup); }
+.dialog-label { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; font-weight: 700; }
+.dialog-input { margin-top: 12px; background: var(--dasar); }
+.dialog-label .dialog-input { margin-top: 0; font-weight: 400; }
+.dialog-tombol { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; margin-top: 20px; }
+.dialog-tombol .utama, .dialog-tombol .kedua { min-height: 48px; padding: 0 12px; font-size: 1rem; }
+@media (min-width: 520px) {
+  .dialog-latar { align-items: center; }
+  .dialog-panel { animation-name: dialog-skala-masuk; }
+  .dialog-latar.tutup .dialog-panel { animation-name: dialog-skala-keluar; }
+}
+@keyframes dialog-latar-masuk { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dialog-latar-keluar { from { opacity: 1; } to { opacity: 0; } }
+@keyframes dialog-naik { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes dialog-turun { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(16px); } }
+@keyframes dialog-skala-masuk { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes dialog-skala-keluar { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(0.97); } }
+
+/* ---------------------------------- Chat ---------------------------------- */
+.aksi-kepala { display: flex; gap: 8px; }
+.tombol-chat { position: relative; display: inline-flex; align-items: center; gap: 6px; }
+.badge-chat {
+  position: absolute; top: -6px; right: -6px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--pil);
+  background: var(--aksen); color: var(--pada-aksen); font-size: 0.75rem; font-weight: 800; line-height: 22px; text-align: center;
+  font-variant-numeric: tabular-nums; box-shadow: 0 0 0 2px var(--bg); animation: chat-badge 200ms ease-out both;
+}
+.chat-latar {
+  position: fixed; inset: 0; z-index: 40; display: flex; align-items: flex-end; justify-content: center;
+  background: rgba(0, 0, 0, 0.65); animation: dialog-latar-masuk 200ms ease-out both;
+}
+.chat-latar.tutup { animation: dialog-latar-keluar 220ms ease-in both; pointer-events: none; }
+.chat-panel {
+  width: 100%; max-width: 560px; height: min(78dvh, 640px); display: flex; flex-direction: column; gap: 10px;
+  background: var(--permukaan); border-radius: var(--r-luar) var(--r-luar) 0 0;
+  padding: 14px calc(env(safe-area-inset-right) + 14px) calc(env(safe-area-inset-bottom) + 12px) calc(env(safe-area-inset-left) + 14px);
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5); animation: chat-naik 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.chat-latar.tutup .chat-panel { animation: chat-turun 220ms ease-in both; }
+.chat-kepala { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.chat-kepala h2 { margin: 0; font-size: 1.35rem; font-weight: 800; }
+.chat-daftar {
+  flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0; padding: 4px 2px;
+  list-style: none; display: flex; flex-direction: column; gap: 8px;
+}
+.chat-kosong { margin: auto 0; text-align: center; color: var(--redup); font-size: 0.92rem; padding: 0 12px; }
+.chat-pesan { align-self: flex-start; max-width: 82%; background: var(--permukaan-2); border-radius: var(--r-luar) var(--r-luar) var(--r-luar) 4px; padding: 6px 12px 8px; }
+.chat-pesan.saya { align-self: flex-end; background: var(--aksen); color: var(--pada-aksen); border-radius: var(--r-luar) var(--r-luar) 4px var(--r-luar); }
+.chat-pesan.saya .chat-meta, .chat-pesan.saya .chat-nama { color: var(--pada-aksen); opacity: 0.75; }
+.chat-meta { display: flex; align-items: baseline; gap: 8px; font-size: 0.75rem; color: var(--redup); font-variant-numeric: tabular-nums; }
+.chat-nama { font-weight: 800; color: var(--teks); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+.chat-teks { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.chat-teks.emoji { font-size: 1.8rem; line-height: 1.2; }
+.chat-emoji { display: flex; gap: 6px; overflow-x: auto; }
+.chat-emoji button {
+  flex: 0 0 auto; min-width: 44px; min-height: 44px; border-radius: var(--pil); border: 0;
+  background: var(--permukaan-2); font-size: 1.3rem;
+}
+.chat-form { display: flex; gap: 8px; }
+.chat-form input { flex: 1; min-width: 0; border-radius: var(--pil); padding: 0 16px; }
+.chat-form .utama { min-height: 48px; padding: 0 20px; width: auto; }
+.chat-info { margin: 0; min-height: 1.1em; font-size: 0.8rem; color: var(--redup); }
+@keyframes chat-naik { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes chat-turun { from { transform: none; } to { transform: translateY(100%); } }
+@keyframes chat-badge { from { transform: scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
+
+
+/* Pengaman koneksi macet: alasan + tombol Coba lagi / Keluar. */
+.kartu.macet { margin: 0 0 12px; }
+.kartu.macet .galat { margin: 0; }
+.kartu.macet .baris-tombol > *, .kartu.besar .baris-tombol > * { flex: 1; }
+.diagnosa { margin: 8px 0 0; text-align: left; }
+.diagnosa .catatan { margin: 0 0 4px; }
+.diagnosa ul { margin: 0; padding-left: 18px; font-size: 0.85rem; opacity: 0.85; overflow-wrap: anywhere; }
+.diagnosa li { margin: 2px 0; }
+
+/* ---------------------------- Suara & notifikasi ---------------------------- */
+.kecil.ikon { display: inline-flex; align-items: center; justify-content: center; padding: 0; width: 44px; }
+.panel-suara { display: flex; flex-direction: column; gap: 12px; }
+.panel-suara h2 { margin-bottom: 0; }
+.baris-atur { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--garis); }
+.baris-atur .segmen { width: 100%; }
+.atas-beranda { position: absolute; top: calc(env(safe-area-inset-top) + 12px); right: calc(env(safe-area-inset-right) + 12px); }
+.beranda { position: relative; }
+
+/* ---------- Dok bawah (Petunjuk + Chat): tetap di tempat saat digulir ---------- */
+:root { --tinggi-dok: calc(env(safe-area-inset-bottom) + 65px); }
+.dok { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; justify-content: center; pointer-events: none; }
+.dok-isi {
+  pointer-events: auto; width: 100%; max-width: 480px; display: flex; gap: 8px;
+  padding: 8px calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 8px) calc(env(safe-area-inset-left) + 16px);
+  background: var(--bg); border-top: 1px solid var(--garis);
+}
+.tombol-dok { flex: 1; min-height: 48px; justify-content: center; display: inline-flex; align-items: center; gap: 8px; position: relative; }
+.angka-dok {
+  min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--pil); background: var(--permukaan-2); color: var(--redup);
+  font-size: 0.75rem; font-weight: 800; line-height: 22px; font-variant-numeric: tabular-nums;
+}
+.dok .badge-chat { top: -6px; right: 8px; }
+.wadah.punya-dok { padding-bottom: var(--tinggi-dok); }
+/* Tombol aksi (Skip, Vote, Hitung, ...) duduk tepat di atas dok, tidak pernah tertutup. */
+.wadah.punya-dok .aksi-bawah { bottom: var(--tinggi-dok); padding-bottom: 12px; }
+.wadah.punya-dok .toast { bottom: calc(var(--tinggi-dok) + 96px); }
+/* Saat mengetik petunjuk/tebakan, keyboard HP sudah memakan layar: dok disembunyikan. */
+@media (pointer: coarse) {
+  .wadah.punya-dok:has(.form-petunjuk input:focus, .tebak input:focus) .dok { display: none; }
+  .wadah.punya-dok:has(.form-petunjuk input:focus, .tebak input:focus) .aksi-bawah { bottom: 0; padding-bottom: calc(env(safe-area-inset-bottom) + 12px); }
+  .wadah.punya-dok:has(.form-petunjuk input:focus, .tebak input:focus) { padding-bottom: 0; }
+}
+
+
+/* Akun dan profil */
+.stat-utama { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; margin-top: 8px; }
+.stat-utama div { background: var(--permukaan-2); border-radius: var(--r-dalam); padding: 10px 4px; display: flex; flex-direction: column; gap: 2px; }
+.stat-utama strong { font-size: 1.35rem; font-weight: 800; }
+.stat-utama span { color: var(--redup); font-size: 0.8rem; }
+.stat-peran { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 6px; }
+.stat-peran li { display: grid; grid-template-columns: 1fr auto 3.5em; gap: 8px; align-items: center; }
+.stat-peran li span:nth-child(2) { color: var(--redup); font-size: 0.875rem; }
+.stat-peran li strong { text-align: right; }
+.daftar-riwayat { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 10px; }
+.daftar-riwayat li { border-top: 1px solid var(--garis); padding-top: 8px; overflow-wrap: anywhere; }
+.teks-menang { color: var(--aksen); }
+.teks-kalah { color: var(--redup); }
+.nama-akun { font-size: 1.25rem; font-weight: 800; margin: 4px 0 0; overflow-wrap: anywhere; }
+.lapisan-profil { position: fixed; inset: 0; z-index: 50; background: var(--bg); overflow-y: auto; }
+.baris-cari { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.daftar-cari { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 4px; }
+.tautan { background: none; border: 0; padding: 6px 0; color: var(--aksen); font: inherit; font-weight: 700; text-align: left; min-height: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.tautan.nama-profil { color: inherit; padding: 0; text-decoration-color: var(--garis-kuat); }
+.avatar { display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 50%; object-fit: cover; color: #fff; font-weight: 800; line-height: 1; vertical-align: middle; user-select: none; }
+.profil-kepala { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.baris-avatar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.nama-dengan-avatar { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.baris-avatar .kedua { width: auto; min-height: 44px; padding: 0 16px; font-size: 0.9rem; }
+.tombol-label { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.tombol-label.nonaktif { opacity: 0.4; cursor: not-allowed; }
+.tombol-label:focus-within { outline: 2px solid var(--teks); outline-offset: 2px; }
+
+/* Tahap 2: menu tambahan, peringkat, kamus pemain */
+.baris-menu { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.baris-menu button { padding-left: 4px; padding-right: 4px; min-width: 0; }
+.daftar-peringkat { list-style: none; margin: 0; padding: 8px 12px; }
+.daftar-peringkat li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--garis, rgba(255,255,255,0.08)); }
+.daftar-peringkat li:last-child { border-bottom: 0; }
+.daftar-peringkat li.sendiri { background: rgba(34, 214, 104, 0.08); border-radius: 10px; padding-left: 6px; padding-right: 6px; }
+.daftar-peringkat .nomor { width: 24px; text-align: center; font-weight: 700; flex: none; }
+.daftar-peringkat .nama-dengan-avatar { flex: 1; min-width: 0; }
+.nama-peringkat { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.angka-peringkat { text-align: right; font-size: 0.85rem; line-height: 1.3; flex: none; }
+.angka-peringkat small { opacity: 0.7; }
+
+
+/* Avatar + nama sejajar di tengah (lobby, hasil, chat, peringkat, pencarian) */
+.nama-dengan-avatar { display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; line-height: 1.25; vertical-align: middle; text-decoration: none; }
+.nama-dengan-avatar > .avatar,
+.nama-dengan-avatar > .bingkai-avatar { flex-shrink: 0; }
+.nama-teks { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.25; }
+.tautan.nama-dengan-avatar .nama-teks { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--garis-kuat); }
+.label-kamu { font-style: normal; color: var(--redup); font-weight: 500; line-height: 1.25; flex-shrink: 0; margin-left: 4px; }
+.daftar-lobby .nama { display: inline-flex; align-items: center; min-width: 0; line-height: 1.25; overflow: visible; }
+.daftar-lobby .nama-dengan-avatar { overflow: visible; gap: 10px; }
+.daftar-lobby .nama-dengan-avatar > .bingkai-avatar { margin-right: 2px; }
+.daftar-hasil li, .daftar-cari li { align-items: center; }
+.nama-dengan-avatar > .label-kamu { margin-left: -2px; }
+.kartu .chip-grup + .label { margin-top: 12px; }
+
+/* Single login: pemberitahuan perangkat ini dikeluarkan karena akun masuk di perangkat lain. */
+.pita-keluar {
+  position: fixed; left: 50%; top: calc(env(safe-area-inset-top) + 12px); transform: translateX(-50%);
+  z-index: 40; width: min(92vw, 440px); display: flex; gap: 12px; align-items: center;
+  padding: 12px 16px; border-radius: var(--r-dalam); background: var(--biru); color: #fff;
+  font-weight: 600; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.pita-keluar span { flex: 1; }
+.pita-keluar button { flex: none; width: auto; min-height: 40px; padding: 0 14px; }
+
+
+/* ---------- Masukan (saran/feedback) ---------- */
+.form-masukan .judul-kartu { margin: 0 0 6px; font-size: 1rem; }
+.area-masukan { min-height: 96px; resize: vertical; line-height: 1.4; }
+.daftar-masukan { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0; }
+.daftar-masukan > li { padding: 12px 4px; border-top: 1px solid var(--garis); }
+.daftar-masukan > li:first-child { border-top: 0; }
+.daftar-masukan > li.sendiri { background: rgba(30, 215, 96, 0.06); border-radius: 8px; padding-left: 8px; padding-right: 8px; }
+.masukan-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 6px; font-weight: 700; }
+.masukan-isi { margin: 0 0 8px; white-space: pre-wrap; overflow-wrap: break-word; line-height: 1.4; }
+.masukan-aksi { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.masukan-aksi .kecil.pilih { background: var(--aksen); color: var(--pada-aksen); border-color: var(--aksen); }
+.status-masukan { font-size: 0.65rem; }
+.status-masukan.status-baru { background: var(--permukaan-2); color: var(--teks); }
+.status-masukan.status-diterima { background: #3b82f6; color: #fff; }
+.status-masukan.status-dikerjakan { background: #f97316; color: #fff; }
+.status-masukan.status-selesai { background: var(--aksen); color: var(--pada-aksen); }
+.status-masukan.status-ditolak { background: var(--merah); color: #fff; }
+.tombol-peringkat { flex: 0.85; }
+
+
+/* ---------- Kehadiran: menyambung (bukan offline) ---------- */
+.titik.sync { background: #fbbf24; animation: 1s ease-in-out infinite alternate kedip; }
+.lencana.sync { background: var(--permukaan-2); color: var(--kuning, #fbbf24); }
+
+/* ---------- Balasan masukan ---------- */
+.masukan-balasan { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--garis); }
+.daftar-balasan { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.daftar-balasan li { background: var(--permukaan-2); border-radius: var(--r-dalam); padding: 8px 10px; }
+.balasan-meta { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: baseline; font-size: .8rem; font-weight: 700; margin-bottom: 4px; }
+.balasan-isi { margin: 0; white-space: pre-wrap; overflow-wrap: break-word; font-size: .92rem; line-height: 1.35; }
+.form-balasan { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.form-balasan textarea { min-height: 56px; resize: vertical; }
+
+
+/* Daftar room publik (menu Online) - mobile-first */
+.daftar-room {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.daftar-room .item-room {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--teks) 12%, transparent);
+  background: var(--permukaan-2);
+  color: var(--teks);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.daftar-room .item-room:disabled { opacity: 0.5; cursor: default; }
+.daftar-room .item-room:not(:disabled):active { transform: scale(0.99); }
+.room-atas, .room-bawah {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.room-host {
+  font-size: 0.95rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
+}
+.room-bawah {
+  font-size: 0.78rem;
+  color: var(--redup);
+}
+.room-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 65%;
+}
+.lencana-status {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--pil);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.lencana-status.lobby {
+  background: color-mix(in srgb, var(--aksen) 28%, transparent);
+  color: var(--teks);
+}
+.lencana-status.main {
+  background: color-mix(in srgb, #f59e0b 32%, transparent);
+  color: #fde68a;
+}
+@media (max-width: 420px) {
+  .daftar-room .item-room { padding: 11px 12px; }
+  .room-host { font-size: 0.9rem; }
+}
+
+
+.baris-judul { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pemutar { width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--garis-kuat); border-top-color: var(--aksen); animation: putar-ww 0.9s linear infinite; }
+@keyframes putar-ww { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .pemutar { animation: none; } }
+.ruang-online { padding-bottom: var(--tinggi-dok); }
+.bar-status .kecil { margin-left: auto; }
+.bar-status { flex-wrap: wrap; }
+
+/* ---------- Daftar pemain di room: satu baris per pemain (pola daftar-petunjuk undercover) ---------- */
+.daftar-giliran { list-style: none; padding: 0; margin: 4px 0 0; display: flex; flex-direction: column; gap: 4px; }
+.daftar-giliran > li {
+  display: grid; grid-template-columns: 8px auto minmax(0, 1fr) auto auto; gap: 6px 10px; align-items: center;
+  padding: 8px 8px 10px; border-top: 1px solid var(--garis); border-radius: 8px; overflow: visible;
+}
+.daftar-giliran > li:first-child { border-top: 0; }
+.daftar-giliran > li.mati { opacity: 0.55; }
+.daftar-giliran > li.mati .nama-teks { text-decoration: line-through; }
+.dp-ava { display: inline-flex; align-items: center; flex: none; overflow: visible; padding: 2px 4px 4px 0; min-height: 44px; text-decoration: none; }
+.dp-nama { font-weight: 700; min-width: 0; line-height: 1.35; display: flex; flex-direction: column; gap: 2px; }
+.dp-nama .nama-teks { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+.dp-status { display: block; color: var(--redup); font-size: 0.75rem; font-weight: 600; }
+.dp-kosong { color: var(--redup); font-size: 0.8rem; font-style: italic; }
+.label-kamu { font-style: normal; color: var(--redup); font-weight: 500; margin-left: 4px; }
+.kecil.mini { min-height: 36px; padding: 0 10px; font-size: 0.78rem; }
