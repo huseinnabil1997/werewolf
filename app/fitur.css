@@ -140,12 +140,13 @@ button.kecil.mini { min-height: 30px; font-size: 0.72rem; }
   font-variant-numeric: tabular-nums; box-shadow: 0 0 0 2px var(--bg); animation: chat-badge 200ms ease-out both;
 }
 .chat-latar {
-  position: fixed; inset: 0; z-index: 40; display: flex; align-items: flex-end; justify-content: center;
+  /* --vv-*: visual viewport dari ChatRoom, agar panel tidak tertutup keyboard HP. */
+  position: fixed; left: 0; right: 0; top: var(--vv-atas, 0px); height: var(--vv-tinggi, 100%); z-index: 40; display: flex; align-items: flex-end; justify-content: center;
   background: rgba(0, 0, 0, 0.65); animation: dialog-latar-masuk 200ms ease-out both;
 }
 .chat-latar.tutup { animation: dialog-latar-keluar 220ms ease-in both; pointer-events: none; }
 .chat-panel {
-  width: 100%; max-width: 560px; height: min(78dvh, 640px); display: flex; flex-direction: column; gap: 10px;
+  width: 100%; max-width: 560px; height: min(78dvh, 640px); max-height: 100%; display: flex; flex-direction: column; gap: 10px;
   background: var(--permukaan); border-radius: var(--r-luar) var(--r-luar) 0 0;
   padding: 14px calc(env(safe-area-inset-right) + 14px) calc(env(safe-area-inset-bottom) + 12px) calc(env(safe-area-inset-left) + 14px);
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5); animation: chat-naik 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;

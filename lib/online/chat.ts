@@ -129,3 +129,17 @@ export function jamChat(waktu: number): string {
   const d = new Date(waktu);
   return `${String(d.getHours()).padStart(2, '0')}.${String(d.getMinutes()).padStart(2, '0')}`;
 }
+
+/**
+ * Area layar yang benar-benar terlihat (di atas keyboard virtual), relatif ke layout viewport.
+ * Di browser yang menghormati `interactive-widget=resizes-content`, hasilnya sama dengan seluruh jendela.
+ * Di browser yang menimpa konten dengan keyboard, tinggi visual viewport lebih kecil dan panel chat ikut dipendekkan.
+ */
+export function areaTerlihat(
+  vv: { height: number; offsetTop: number } | null | undefined,
+  tinggiJendela: number,
+): { atas: number; tinggi: number } {
+  if (!vv || !(vv.height > 0)) return { atas: 0, tinggi: tinggiJendela };
+  const atas = Math.max(0, Math.round(vv.offsetTop));
+  return { atas, tinggi: Math.max(0, Math.round(Math.min(vv.height, tinggiJendela - atas))) };
+}

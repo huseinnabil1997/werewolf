@@ -3,12 +3,13 @@
 // Chat room mode online: tombol di dok bawah (tetap di tempat saat digulir) dengan badge belum dibaca + panel bottom sheet.
 // Semua teks dirender sebagai teks React biasa (otomatis di-escape), tanpa HTML mentah.
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent as KeyboardEventReact } from 'react';
+import { createPortal } from 'react-dom';
 import { indeksFokusBerikut } from '@/lib/dialog';
 import { Avatar } from './Avatar';
 import { gelarNama, usePetaGelar } from '@/lib/online/gelarRoom';
 import { META_KATEGORI } from '@/lib/peringkatMusim';
 import {
-  EMOJI_CEPAT, MAKS_PANJANG_CHAT, hanyaEmoji, hitungBelumDibaca, jamChat, type PesanChat,
+  EMOJI_CEPAT, MAKS_PANJANG_CHAT, areaTerlihat, hanyaEmoji, hitungBelumDibaca, jamChat, type PesanChat,
 } from '@/lib/online/chat';
 
 const DURASI_TUTUP_MS = 220;
@@ -33,6 +34,7 @@ export function ChatRoom({ pesan, saya, kirim, galat, teks, ubahTeks }: {
   const [dibaca, setDibaca] = useState<string | null>(null);
   const tombolRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const latarRef = useRef<HTMLDivElement>(null);
   const daftarRef = useRef<HTMLOListElement>(null);
   const dekatBawah = useRef(true);
   const judulId = useId();
@@ -64,6 +66,32 @@ export function ChatRoom({ pesan, saya, kirim, galat, teks, ubahTeks }: {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = lama; };
   }, [fase]);
+
+  // Keyboard HP: latar mengikuti visual viewport agar kolom pesan selalu di atas keyboard,
+  // juga di browser yang menimpa konten dengan keyboard alih-alih mengecilkan halaman.
+  useEffect(() => {
+    if (!terbuka) return;
+    const vv = window.visualViewport;
+    const atur = () => {
+      const el = latarRef.current;
+      if (!el) return;
+      const { atas, tinggi } = areaTerlihat(vv, window.innerHeight);
+      el.style.setProperty('--vv-atas', `${atas}px`);
+      el.style.setProperty('--vv-tinggi', `${tinggi}px`);
+      // Keyboard baru muncul: tetap tampilkan pesan terbaru.
+      const daftar = daftarRef.current;
+      if (daftar && dekatBawah.current) daftar.scrollTop = daftar.scrollHeight;
+    };
+    atur();
+    window.addEventListener('resize', atur);
+    vv?.addEventListener('resize', atur);
+    vv?.addEventListener('scroll', atur);
+    return () => {
+      window.removeEventListener('resize', atur);
+      vv?.removeEventListener('resize', atur);
+      vv?.removeEventListener('scroll', atur);
+    };
+  }, [terbuka]);
 
   // Esc tetap menutup panel walau fokus sempat lepas ke body (mis. tombol Kirim jadi disabled setelah terkirim).
   useEffect(() => {
@@ -127,8 +155,10 @@ export function ChatRoom({ pesan, saya, kirim, galat, teks, ubahTeks }: {
         {belum > 0 && <span className="badge-chat" aria-hidden>{belum > 9 ? '9+' : belum}</span>}
       </button>
 
-      {terbuka && (
+      {terbuka && createPortal(
+        // Dirender di body agar position: fixed selalu relatif ke layar, bukan ke pembungkus animasi.
         <div
+          ref={latarRef}
           className={`chat-latar${fase === 'menutup' ? ' tutup' : ''}`}
           onMouseDown={(e) => { if (e.target === e.currentTarget) tutup(); }}
         >
@@ -193,7 +223,8 @@ export function ChatRoom({ pesan, saya, kirim, galat, teks, ubahTeks }: {
               {galat ?? (sisa <= 40 ? `Sisa ${sisa} karakter` : '')}
             </p>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );

@@ -171,6 +171,7 @@ export default function LokalGame({ onSuasana, onKeluar }: { onSuasana: (s: Suas
         <DaftarPeranAkhir pemain={g.pemain.map((p) => ({ ...p, peran: g.peran[p.id], hidup: g.hidup[p.id] }))} />
         <Tombol besar onClick={() => ubahGame(mulaiGame(g.pemain, s.manual ?? komposisiOtomatis(g.pemain.length), { durasiDiskusi: s.durasi }))}>Main lagi</Tombol>
         <Tombol varian="garis" onClick={selesaiGame}>Ubah pemain</Tombol>
+        <Tombol varian="hantu" onClick={() => { selesaiGame(); onKeluar(); }}>Kembali ke beranda</Tombol>
       </div>
     );
   }

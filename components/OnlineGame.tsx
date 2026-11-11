@@ -317,19 +317,21 @@ function Ruang({ uid, nama, kodeAwal, onSuasana, onKeluar }: { uid: string; nama
     return () => window.clearInterval(id);
   }, [lobbyMatch, kodeMatch, infoMatch, onlineLobby, pub, perintah]);
 
-  const keluar = async () => {
+  /** Keluar room dengan rapi. `keBeranda`: langsung ke beranda; `tanpaKonfirmasi`: pemain biasa setelah permainan selesai. */
+  const keluar = async ({ keBeranda = false, tanpaKonfirmasi = false } = {}) => {
     const k = konRef.current;
-    if (k) {
+    if (k && !(tanpaKonfirmasi && k.jenis === 'pemain')) {
       const ya = await dialog.konfirmasi(
         k.jenis === 'host'
           ? { judul: 'Keluar dari room?', pesan: 'Peran host pindah otomatis ke pemain lain dan permainan tetap berjalan.', ok: 'Keluar', bahaya: true }
           : { judul: 'Keluar dari room?', pesan: 'Kamu bisa gabung lagi dengan kode yang sama selama room masih dibuka.', ok: 'Keluar', bahaya: true },
       );
       if (!ya) return;
-      if (k.jenis === 'host') await k.h.keluar();
-      else await k.p.keluar();
     }
+    if (k?.jenis === 'host') await k.h.keluar();
+    else if (k) await k.p.keluar();
     bersihkan(null);
+    if (keBeranda) onKeluar();
   };
 
   const cobaLagi = () => {
@@ -480,7 +482,7 @@ function Ruang({ uid, nama, kodeAwal, onSuasana, onKeluar }: { uid: string; nama
             />
           ) : null}
           <Layar kunci={`${g?.fase ?? 'lobi'}-${g?.ronde ?? 0}-${g?.idMain ?? ''}-${g?.putaranVote ?? 1}`}>
-            {g ? <IsiGame pub={pub} pri={pri} uid={uid} host={host} kirim={kirim} perintah={perintah} /> : <Lobi pub={pub} uid={uid} host={host} perintah={perintah} infoMatch={infoMatch} />}
+            {g ? <IsiGame pub={pub} pri={pri} uid={uid} host={host} kirim={kirim} perintah={perintah} keBeranda={() => void keluar({ keBeranda: true, tanpaKonfirmasi: true })} /> : <Lobi pub={pub} uid={uid} host={host} perintah={perintah} infoMatch={infoMatch} />}
           </Layar>
         </>
       )}
@@ -668,13 +670,15 @@ function Lobi({ pub, uid, host, perintah, infoMatch }: { pub: ViewPublik; uid: s
 
 /* --------------------------------- Permainan -------------------------------- */
 
-function IsiGame({ pub, pri, uid, host, kirim, perintah }: {
+function IsiGame({ pub, pri, uid, host, kirim, perintah, keBeranda }: {
   pub: ViewPublik;
   pri: ViewPribadi | null;
   uid: string;
   host: boolean;
   kirim: (a: AksiPemain) => void;
   perintah: (a: AksiHost) => string | null;
+  /** Keluar room lalu kembali ke beranda (layar akhir). */
+  keBeranda: () => void;
 }) {
   const dialog = useDialog();
   const g = pub.game!;
@@ -784,7 +788,8 @@ function IsiGame({ pub, pri, uid, host, kirim, perintah }: {
               <Tombol besar id="main-lagi" onClick={() => perintah({ jenis: 'main_lagi', peserta })}>Main lagi</Tombol>
               <Tombol varian="garis" onClick={() => perintah({ jenis: 'ke_lobby' })}>Kembali ke lobby</Tombol>
             </>
-          ) : <Catatan>Menunggu host memulai permainan baru.</Catatan>}
+          ) : <Catatan>Menunggu host memulai permainan baru. Atau keluar dulu ke beranda.</Catatan>}
+          <Tombol varian={host ? 'hantu' : 'garis'} id="keluar-beranda" onClick={keBeranda}>Keluar ke beranda</Tombol>
           {daftar}
         </div>
       );

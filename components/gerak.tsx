@@ -142,7 +142,9 @@ export function Layar({ kunci, children }: { kunci: string; children: ReactNode 
         key={kunci}
         className="layar"
         initial={{ opacity: 0, clipPath: 'inset(0 0 100% 0 round 16px)', filter: 'blur(6px)' }}
-        animate={{ opacity: 1, clipPath: 'inset(0 0 0% 0 round 0px)', filter: 'blur(0px)' }}
+        // Setelah masuk, clip-path dan filter dilepas: filter apa pun (termasuk blur(0px)) membuat elemen ini jadi
+        // containing block untuk position: fixed, sehingga dok dan panel chat ikut menggulir dan tertutup keyboard.
+        animate={{ opacity: 1, clipPath: 'inset(0 0 0% 0 round 0px)', filter: 'blur(0px)', transitionEnd: { clipPath: 'none', filter: 'none' } }}
         exit={{ opacity: 0, clipPath: 'inset(100% 0 0 0 round 16px)', filter: 'blur(6px)' }}
         transition={{ duration: 0.55, ease: EASE_KELUAR }}
       >

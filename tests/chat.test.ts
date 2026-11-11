@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
-  buatStateChat, gabungChat, hanyaEmoji, hitungBelumDibaca, LIMIT_CHAT, MAKS_PANJANG_CHAT, MAKS_RIWAYAT_CHAT,
+  areaTerlihat, buatStateChat, gabungChat, hanyaEmoji, hitungBelumDibaca, LIMIT_CHAT, MAKS_PANJANG_CHAT, MAKS_RIWAYAT_CHAT,
   rapikanTeksChat, terimaChat, validasiPesanChat, type PesanChat,
 } from '../lib/online/chat';
 
@@ -130,5 +130,21 @@ describe('keamanan render chat', () => {
     for (const d of ['app', 'components', 'lib']) jelajah(join(__dirname, '..', d));
     const temuan = berkas.filter((f) => /dangerouslySetInnerHTML|innerHTML\s*=/.test(readFileSync(f, 'utf8')));
     expect(temuan).toEqual([]);
+  });
+});
+
+describe('areaTerlihat (keyboard HP)', () => {
+  it('tanpa visualViewport memakai seluruh jendela', () => {
+    expect(areaTerlihat(null, 780)).toEqual({ atas: 0, tinggi: 780 });
+  });
+  it('keyboard mengecilkan halaman (resizes-content): area sama dengan jendela', () => {
+    expect(areaTerlihat({ height: 480, offsetTop: 0 }, 480)).toEqual({ atas: 0, tinggi: 480 });
+  });
+  it('keyboard menimpa konten: panel dipendekkan ke atas keyboard', () => {
+    expect(areaTerlihat({ height: 480, offsetTop: 0 }, 780)).toEqual({ atas: 0, tinggi: 480 });
+  });
+  it('visual viewport tergeser: panel ikut turun sejauh offset', () => {
+    expect(areaTerlihat({ height: 480.4, offsetTop: 120.2 }, 780)).toEqual({ atas: 120, tinggi: 480 });
+    expect(areaTerlihat({ height: 700, offsetTop: 300 }, 780)).toEqual({ atas: 300, tinggi: 480 });
   });
 });
